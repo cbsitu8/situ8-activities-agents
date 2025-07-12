@@ -10,42 +10,38 @@ class ThreatLevel(str, Enum):
     CRITICAL = "CRITICAL"
 
 class CVThreatEvent(BaseModel):
-    stored_at: str
-    record_id: str
-    data: Dict[str, Any]
+    alert_event_id: str
+    severity: str
+    site_name: str
+    detection_name: str
+    creation_time: str
+    camera_name: str
+    readers_name: Optional[str] = None
     
     @property
     def threat_signature(self) -> Dict[str, Any]:
-        return self.data.get('threatSignature', {})
+        return {
+            "name": self.detection_name,
+            "id": self.alert_event_id
+        }
     
     @property
     def location(self) -> str:
-        space = self.data.get('stream', {}).get('space', {})
-        return space.get('fullPath', 'Unknown Location')
-    
-    @property
-    def severity(self) -> str:
-        return self.data.get('severity', 'UNKNOWN')
+        return f"{self.site_name} > {self.camera_name}"
     
     @property
     def alert_name(self) -> str:
-        return self.data.get('alertName', 'Unknown Alert')
-    
-    @property
-    def site_name(self) -> str:
-        return self.data.get('site', {}).get('name', 'Unknown Site')
+        return self.detection_name
 
 class AccessControlEvent(BaseModel):
     serial_number: str
     device_id: str
     controller_id: str
     segment_id: str
-    timestamp_processed: str
     alarm_name: str
     timestamp: str
     alarm_id: str
-    source: str
-    Subdevice_id: str
+    badge_id: Optional[str] = None
 
 class TriageAnalysis(BaseModel):
     event_type: str

@@ -14,14 +14,16 @@ class CVThreatAnalyzer:
     def _run(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze a CV threat detection event and return triage analysis."""
         
-        # Extract key information
-        threat_signature = event_data.get('data', {}).get('threatSignature', {})
-        threat_name = threat_signature.get('name', 'Unknown Threat')
-        threat_icon = threat_signature.get('icon', 'UNKNOWN')
-        severity = event_data.get('data', {}).get('severity', 'UNKNOWN')
-        alert_name = event_data.get('data', {}).get('alertName', 'Unknown Alert')
-        location = self._extract_location(event_data)
-        site_name = event_data.get('data', {}).get('site', {}).get('name', 'Unknown Site')
+        # Extract key information from CSV-based model
+        threat_name = event_data.get('detection_name', 'Unknown Threat')
+        severity = event_data.get('severity', 'UNKNOWN')
+        alert_name = event_data.get('detection_name', 'Unknown Alert')
+        site_name = event_data.get('site_name', 'Unknown Site')
+        camera_name = event_data.get('camera_name', 'Unknown Camera')
+        location = f"{site_name} > {camera_name}"
+        
+        # No icon in CSV data, derive from threat name
+        threat_icon = self._derive_threat_icon(threat_name)
         
         # Determine threat level and analysis
         threat_level, confidence, false_positive_prob = self._assess_threat_level(
@@ -63,10 +65,24 @@ class CVThreatAnalyzer:
             "priority_score": priority_score
         }
     
-    def _extract_location(self, event_data: Dict[str, Any]) -> str:
-        """Extract location information from event data."""
-        space = event_data.get('data', {}).get('stream', {}).get('space', {})
-        return space.get('fullPath', 'Unknown Location')
+    def _derive_threat_icon(self, threat_name: str) -> str:
+        """Derive threat icon from threat name."""
+        threat_lower = threat_name.lower()
+        
+        if 'firearm' in threat_lower or 'gun' in threat_lower or 'brandishing' in threat_lower:
+            return 'GUN'
+        elif 'fire' in threat_lower or 'smoke' in threat_lower:
+            return 'FIRE'
+        elif 'falling' in threat_lower:
+            return 'FALL'
+        elif 'fence' in threat_lower or 'jumping' in threat_lower:
+            return 'FENCE'
+        elif 'door' in threat_lower or 'propped' in threat_lower:
+            return 'DOOR'
+        elif 'tailgating' in threat_lower:
+            return 'PERSON'
+        else:
+            return 'UNKNOWN'
     
     def _assess_threat_level(self, threat_name: str, threat_icon: str, severity: str, location: str) -> Tuple[ThreatLevel, float, float]:
         """Assess threat level based on threat characteristics."""

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Triage Agent - Simulation Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    <style>
+        .json-display {
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+        }
+        .event-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 1rem;
+        }
+        .threat-level-critical {
+            border-left-color: #dc3545 !important;
+        }
+        .threat-level-high {
+            border-left-color: #fd7e14 !important;
+        }
+        .threat-level-medium {
+            border-left-color: #ffc107 !important;
+        }
+        .threat-level-low {
+            border-left-color: #198754 !important;
+        }
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+        .event-timestamp {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        .analysis-summary {
+            background-color: #f8f9fa;
+            border-radius: 0.375rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-4">
+        <!-- Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h1 class="display-4">Security Triage Agent</h1>
+                <p class="lead">Real-time simulation dashboard for CV threat detection and access control analysis</p>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">CV Events</h5>
+                        <h2 id="cv-count">-</h2>
+                        <small>Available</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Access Events</h5>
+                        <h2 id="access-count">-</h2>
+                        <small>Available</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Events Processed</h5>
+                        <h2 id="processed-count">0</h2>
+                        <small>This Session</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">System Status</h5>
+                        <h5 id="system-status" class="text-success">●</h5>
+                        <small>Operational</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Simulation Controls</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Single Event Analysis</h6>
+                                <div class="btn-group mb-3" role="group">
+                                    <button type="button" class="btn btn-outline-primary" id="cv-btn">
+                                        <span class="spinner-border spinner-border-sm d-none" id="cv-spinner"></span>
+                                        Analyze CV Threat
+                                    </button>
+                                    <button type="button" class="btn btn-outline-warning" id="access-btn">
+                                        <span class="spinner-border spinner-border-sm d-none" id="access-spinner"></span>
+                                        Analyze Access Control
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Batch Analysis</h6>
+                                <button type="button" class="btn btn-outline-success" id="batch-btn">
+                                    <span class="spinner-border spinner-border-sm d-none" id="batch-spinner"></span>
+                                    Analyze Batch (2 CV + 2 Access)
+                                </button>
+                                <button type="button" class="btn btn-outline-info ms-2" id="clear-btn">
+                                    Clear Results
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Analysis Results</h5>
+                        <span class="badge bg-secondary" id="results-count">0 events</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="results-container">
+                            <div class="text-center text-muted py-5">
+                                <i class="fas fa-search fa-3x mb-3"></i>
+                                <p>Click a button above to start analyzing security events</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Prism JS for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+
+    <script>
+        // Global variables
+        let processedCount = 0;
+        let resultsContainer = document.getElementById('results-container');
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            setupEventListeners();
+        });
+
+        // Load system statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/simulate/stats');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    document.getElementById('cv-count').textContent = data.stats.cv_events_loaded;
+                    document.getElementById('access-count').textContent = data.stats.access_events_loaded;
+                    
+                    // Update system status
+                    const statusEl = document.getElementById('system-status');
+                    if (data.stats.cv_events_loaded > 0 && data.stats.access_events_loaded > 0) {
+                        statusEl.className = 'text-success';
+                        statusEl.textContent = '● Operational';
+                    } else {
+                        statusEl.className = 'text-warning';
+                        statusEl.textContent = '⚠ Limited Data';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('system-status').className = 'text-danger';
+                document.getElementById('system-status').textContent = '● Error';
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('cv-btn').addEventListener('click', () => analyzeEvent('cv'));
+            document.getElementById('access-btn').addEventListener('click', () => analyzeEvent('access'));
+            document.getElementById('batch-btn').addEventListener('click', () => analyzeBatch());
+            document.getElementById('clear-btn').addEventListener('click', () => clearResults());
+        }
+
+        // Analyze single event
+        async function analyzeEvent(type) {
+            const btn = document.getElementById(`${type}-btn`);
+            const spinner = document.getElementById(`${type}-spinner`);
+            
+            // Show loading state
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            
+            try {
+                const response = await fetch(`/simulate/${type}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    displayResult(data);
+                    processedCount++;
+                    updateProcessedCount();
+                } else {
+                    showError(`Analysis failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error(`Error analyzing ${type} event:`, error);
+                showError(`Network error: ${error.message}`);
+            } finally {
+                // Hide loading state
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+            }
+        }
+
+        // Analyze batch of events
+        async function analyzeBatch() {
+            const btn = document.getElementById('batch-btn');
+            const spinner = document.getElementById('batch-spinner');
+            
+            // Show loading state
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            
+            try {
+                const response = await fetch('/simulate/batch?cv_count=2&access_count=2');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Display each result
+                    data.results.forEach(result => {
+                        displayResult(result);
+                    });
+                    processedCount += data.total_events;
+                    updateProcessedCount();
+                } else {
+                    showError(`Batch analysis failed: ${data.detail || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error('Error in batch analysis:', error);
+                showError(`Network error: ${error.message}`);
+            } finally {
+                // Hide loading state
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+            }
+        }
+
+        // Display analysis result
+        function displayResult(result) {
+            // Clear welcome message if it's the first result
+            if (processedCount === 0) {
+                resultsContainer.innerHTML = '';
+            }
+
+            const eventCard = createEventCard(result);
+            resultsContainer.insertAdjacentHTML('afterbegin', eventCard);
+            
+            // Update results count
+            updateResultsCount();
+            
+            // Highlight code
+            Prism.highlightAll();
+        }
+
+        // Create event card HTML
+        function createEventCard(result) {
+            const threatLevel = result.analysis_result.ai_threat_level.toLowerCase();
+            const timestamp = new Date(parseInt(result.timestamp) * 1000).toLocaleString();
+            
+            return `
+                <div class="event-card card threat-level-${threatLevel}">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">${result.event_type.replace('_', ' ')}</h6>
+                                <small class="event-timestamp">${timestamp}</small>
+                            </div>
+                            <span class="badge bg-${getThreatLevelColor(result.analysis_result.ai_threat_level)}">${result.analysis_result.ai_threat_level}</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="analysis-summary">
+                            <h6>Analysis Summary</h6>
+                            <p class="mb-2"><strong>Threat Level:</strong> ${result.analysis_result.ai_threat_level}</p>
+                            <p class="mb-2"><strong>Confidence:</strong> ${(result.analysis_result.confidence_score * 100).toFixed(1)}%</p>
+                            <p class="mb-2"><strong>False Positive Probability:</strong> ${(result.analysis_result.false_positive_probability * 100).toFixed(1)}%</p>
+                            <p class="mb-0"><strong>Priority Score:</strong> ${result.analysis_result.priority_score}/10</p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Original Event</h6>
+                                <pre class="json-display"><code class="language-json">${JSON.stringify(result.original_event, null, 2)}</code></pre>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Analysis Result</h6>
+                                <pre class="json-display"><code class="language-json">${JSON.stringify(result.analysis_result, null, 2)}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Get threat level color
+        function getThreatLevelColor(level) {
+            const colors = {
+                'CRITICAL': 'danger',
+                'HIGH': 'warning',
+                'MEDIUM': 'info',
+                'LOW': 'success'
+            };
+            return colors[level] || 'secondary';
+        }
+
+        // Clear all results
+        function clearResults() {
+            resultsContainer.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <p>Click a button above to start analyzing security events</p>
+                </div>
+            `;
+            processedCount = 0;
+            updateProcessedCount();
+            updateResultsCount();
+        }
+
+        // Update processed count
+        function updateProcessedCount() {
+            document.getElementById('processed-count').textContent = processedCount;
+        }
+
+        // Update results count
+        function updateResultsCount() {
+            const count = document.querySelectorAll('.event-card').length;
+            document.getElementById('results-count').textContent = `${count} events`;
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorHtml = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>Error:</strong> ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            resultsContainer.insertAdjacentHTML('afterbegin', errorHtml);
+        }
+    </script>
+</body>
+</html>

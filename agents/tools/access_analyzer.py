@@ -18,9 +18,11 @@ class AccessControlAnalyzer:
         # Extract key information
         alarm_name = event_data.get('alarm_name', 'Unknown Alarm')
         device_id = event_data.get('device_id', 'Unknown Device')
-        source = event_data.get('source', 'Unknown Source')
         controller_id = event_data.get('controller_id', 'Unknown Controller')
         timestamp = event_data.get('timestamp', '')
+        
+        # Derive source from device_id since it's not in CSV
+        source = self._derive_source_from_device(device_id)
         
         # Determine threat level and analysis
         threat_level, confidence, false_positive_prob = self._assess_access_threat_level(
@@ -61,6 +63,23 @@ class AccessControlAnalyzer:
             "event_summary": event_summary,
             "priority_score": priority_score
         }
+    
+    def _derive_source_from_device(self, device_id: str) -> str:
+        """Derive source type from device ID."""
+        device_lower = device_id.lower()
+        
+        if 'reader' in device_lower:
+            return 'card_reader'
+        elif 'door' in device_lower:
+            return 'door_contact_sensor'
+        elif 'keypad' in device_lower:
+            return 'keypad'
+        elif 'controller' in device_lower:
+            return 'controller_network'
+        elif 'emergency' in device_lower:
+            return 'emergency_exit_sensor'
+        else:
+            return 'access_control_device'
     
     def _assess_access_threat_level(self, alarm_name: str, source: str, device_id: str) -> Tuple[ThreatLevel, float, float]:
         """Assess threat level based on access control alarm characteristics."""

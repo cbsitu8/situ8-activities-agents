@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from agents.triage_agent import run_triage_analysis, batch_analyze_events
 from models.event_models import CVThreatEvent, AccessControlEvent, TriageAnalysis
+from simulation.simulator import router as simulation_router, initialize_data_loader
 from typing import List, Dict, Any
 import json
 import logging
@@ -27,6 +29,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Include simulation router
+app.include_router(simulation_router)
+
+# Initialize data loader on startup
+@app.on_event("startup")
+async def startup_event():
+    cv_csv_path = "/Users/celinebroomhead/Downloads/MockData_ComputerVision - Sheet2.csv"
+    access_csv_path = "/Users/celinebroomhead/Downloads/MockData_AccessControl - Sheet4.csv"
+    initialize_data_loader(cv_csv_path, access_csv_path)
+    logger.info("Data loader initialized")
 
 # Health check endpoint
 @app.get("/health")
@@ -199,16 +215,25 @@ async def get_config():
         "memory_enabled": True
     }
 
-# Root endpoint
+# Dashboard endpoint
 @app.get("/")
-async def root():
-    """Root endpoint with API information."""
+async def dashboard():
+    """Serve the simulation dashboard."""
+    from fastapi.responses import FileResponse
+    return FileResponse('static/index.html')
+
+# API root endpoint
+@app.get("/api")
+async def api_root():
+    """API information endpoint."""
     return {
         "service": "Security Triage Agent API",
         "version": "1.0.0",
         "description": "CrewAI-powered security event analysis and triage system",
         "endpoints": {
+            "dashboard": "/",
             "health": "/health",
+            "simulation": "/simulate",
             "cv_threat_analysis": "/analyze/cv-threat",
             "access_control_analysis": "/analyze/access-control",
             "batch_analysis": "/analyze/batch",

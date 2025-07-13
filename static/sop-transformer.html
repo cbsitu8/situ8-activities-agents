@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOP Document Transformer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .upload-area {
+            border: 2px dashed #007bff;
+            border-radius: 10px;
+            padding: 3rem;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #0056b3;
+            background-color: #e9ecef;
+        }
+        
+        .upload-area.dragover {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .file-icon {
+            font-size: 3rem;
+            color: #007bff;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-container {
+            margin-top: 1rem;
+        }
+        
+        .sop-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 1rem;
+        }
+        
+        .sop-priority-critical {
+            border-left-color: #dc3545 !important;
+        }
+        
+        .sop-priority-high {
+            border-left-color: #fd7e14 !important;
+        }
+        
+        .sop-priority-medium {
+            border-left-color: #ffc107 !important;
+        }
+        
+        .sop-priority-low {
+            border-left-color: #198754 !important;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+        
+        .search-highlight {
+            background-color: #fff3cd;
+            font-weight: bold;
+        }
+        
+        .json-display {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1rem;
+        }
+        
+        .trigger-badge {
+            font-size: 0.75rem;
+            margin: 0.125rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-file-contract me-2"></i>
+                SOP Document Transformer
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-tachometer-alt me-1"></i>
+                    Main Dashboard
+                </a>
+                <a class="nav-link" href="/activities">
+                    <i class="fas fa-list-alt me-1"></i>
+                    Activities
+                </a>
+                <a class="nav-link active" href="/sop">
+                    <i class="fas fa-file-contract me-1"></i>
+                    SOP Transformer
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="h3 mb-3">
+                    <i class="fas fa-file-contract me-2"></i>
+                    Standard Operating Procedures (SOP) Document Transformer
+                </h1>
+                <p class="text-muted">Upload and transform security procedure documents into structured, searchable knowledge base entries</p>
+            </div>
+        </div>
+
+        <!-- Statistics Row -->
+        <div class="row mb-4" id="statsContainer">
+            <div class="col-md-3">
+                <div class="card stats-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-file-alt fa-2x mb-2"></i>
+                        <h4 class="card-title" id="totalSOPs">-</h4>
+                        <p class="card-text">Total SOPs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="background: linear-gradient(135deg, #dc3545, #c82333); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                        <h4 class="card-title" id="criticalSOPs">-</h4>
+                        <p class="card-text">Critical Priority</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="background: linear-gradient(135deg, #198754, #145a41); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <h4 class="card-title" id="searchableSOPs">-</h4>
+                        <p class="card-text">Searchable Procedures</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="background: linear-gradient(135deg, #6f42c1, #5a32a3); color: white;">
+                    <div class="card-body text-center">
+                        <i class="fas fa-tags fa-2x mb-2"></i>
+                        <h4 class="card-title" id="totalCategories">-</h4>
+                        <p class="card-text">Categories</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>
+                            Upload SOP Document
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                            <div class="file-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <h5>Click to upload or drag and drop</h5>
+                            <p class="text-muted mb-2">Supported formats: .docx, .md</p>
+                            <p class="text-muted">Maximum file size: 2MB</p>
+                            <input type="file" id="fileInput" accept=".docx,.md" style="display: none;">
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="progress-container" id="progressContainer" style="display: none;">
+                            <div class="progress mb-3">
+                                <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted" id="progressMessage">Processing...</small>
+                                <small class="text-muted" id="progressPercent">0%</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Result -->
+                        <div id="uploadResult" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Processing Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>What happens during processing:</h6>
+                        <ol class="small">
+                            <li><strong>Text Extraction:</strong> Extract content from document</li>
+                            <li><strong>AI Analysis:</strong> Identify SOP structure and elements</li>
+                            <li><strong>Categorization:</strong> Classify procedure type and priority</li>
+                            <li><strong>Indexing:</strong> Create searchable vector embeddings</li>
+                        </ol>
+                        
+                        <h6 class="mt-3">Extracted Information:</h6>
+                        <ul class="small">
+                            <li>Procedure triggers and conditions</li>
+                            <li>Required actions and timelines</li>
+                            <li>Notification requirements</li>
+                            <li>Escalation procedures</li>
+                            <li>Regulatory compliance notes</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-search me-2"></i>
+                            Search SOPs
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Search SOPs by keywords, triggers, or conditions...">
+                                    <button class="btn btn-primary" onclick="searchSOPs()">
+                                        <i class="fas fa-search me-1"></i>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="searchFilters">
+                                    <option value="">All Categories</option>
+                                    <option value="medical_emergency">Medical Emergency</option>
+                                    <option value="security_incident">Security Incident</option>
+                                    <option value="access_control">Access Control</option>
+                                    <option value="environmental">Environmental</option>
+                                    <option value="fire_safety">Fire Safety</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Search Results -->
+                        <div id="searchResults" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOP List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            Processed SOPs
+                        </h5>
+                        <button class="btn btn-outline-primary" onclick="refreshSOPs()">
+                            <i class="fas fa-sync-alt me-1"></i>
+                            Refresh
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="sopList">
+                            <div class="text-center py-5">
+                                <i class="fas fa-file-plus fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No SOPs uploaded yet. Upload a document to get started.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOP Detail Modal -->
+    <div class="modal fade" id="sopModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">SOP Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="sopModalBody">
+                    <!-- SOP details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" id="deleteSOP" onclick="deleteSOP()">
+                        <i class="fas fa-trash me-1"></i>
+                        Delete SOP
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentSOPs = [];
+        let currentJobId = null;
+        let currentSOP = null;
+
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+        
+        // Drag and drop handling
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        });
+
+        // Search input handling
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchSOPs();
+            }
+        });
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        function processFile(file) {
+            // Validate file type
+            const allowedTypes = ['.docx', '.md'];
+            const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+            
+            if (!allowedTypes.includes(fileExt)) {
+                showUploadError('Unsupported file type. Please upload .docx or .md files only.');
+                return;
+            }
+            
+            // Validate file size (2MB limit)
+            if (file.size > 2 * 1024 * 1024) {
+                showUploadError('File size exceeds 2MB limit. Please upload a smaller file.');
+                return;
+            }
+            
+            // Upload file
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            showProgress(true);
+            updateProgress(10, 'Uploading file...');
+            
+            fetch('/sop/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.job_id) {
+                    currentJobId = data.job_id;
+                    updateProgress(25, 'File uploaded, starting processing...');
+                    pollProcessingStatus();
+                } else {
+                    throw new Error(data.message || 'Upload failed');
+                }
+            })
+            .catch(error => {
+                console.error('Upload error:', error);
+                showUploadError('Upload failed: ' + error.message);
+            });
+        }
+
+        function pollProcessingStatus() {
+            if (!currentJobId) return;
+            
+            fetch(`/sop/process/${currentJobId}`)
+                .then(response => response.json())
+                .then(data => {
+                    updateProgress(data.progress, data.message);
+                    
+                    if (data.status === 'completed') {
+                        showUploadSuccess('SOP processed successfully!', data.result);
+                        refreshSOPs();
+                        refreshStats();
+                        currentJobId = null;
+                    } else if (data.status === 'failed') {
+                        showUploadError('Processing failed: ' + (data.error || 'Unknown error'));
+                        currentJobId = null;
+                    } else {
+                        // Continue polling
+                        setTimeout(pollProcessingStatus, 1000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Polling error:', error);
+                    showUploadError('Status check failed: ' + error.message);
+                    currentJobId = null;
+                });
+        }
+
+        function updateProgress(percent, message) {
+            const progressBar = document.getElementById('progressBar');
+            const progressMessage = document.getElementById('progressMessage');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            progressBar.style.width = `${percent}%`;
+            progressMessage.textContent = message;
+            progressPercent.textContent = `${percent}%`;
+        }
+
+        function showProgress(show) {
+            document.getElementById('progressContainer').style.display = show ? 'block' : 'none';
+            if (!show) {
+                updateProgress(0, 'Processing...');
+            }
+        }
+
+        function showUploadError(message) {
+            showProgress(false);
+            document.getElementById('uploadResult').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        function showUploadSuccess(message, sop) {
+            showProgress(false);
+            document.getElementById('uploadResult').innerHTML = `
+                <div class="alert alert-success" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    ${message}
+                    ${sop ? `<br><small>SOP ID: ${sop.sop_id} - ${sop.title}</small>` : ''}
+                </div>
+            `;
+            
+            // Clear file input
+            document.getElementById('fileInput').value = '';
+        }
+
+        function refreshSOPs() {
+            fetch('/sop/results')
+                .then(response => response.json())
+                .then(data => {
+                    currentSOPs = data;
+                    displaySOPs(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching SOPs:', error);
+                    showSOPError('Failed to load SOPs: ' + error.message);
+                });
+        }
+
+        function refreshStats() {
+            fetch('/sop/stats')
+                .then(response => response.json())
+                .then(data => {
+                    updateStatsDisplay(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                });
+        }
+
+        function updateStatsDisplay(stats) {
+            document.getElementById('totalSOPs').textContent = stats.total_sops || '0';
+            document.getElementById('criticalSOPs').textContent = stats.priorities?.CRITICAL || '0';
+            document.getElementById('searchableSOPs').textContent = stats.total_sops || '0';
+            document.getElementById('totalCategories').textContent = Object.keys(stats.categories || {}).length || '0';
+        }
+
+        function displaySOPs(sops) {
+            const container = document.getElementById('sopList');
+            
+            if (!sops || sops.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-plus fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No SOPs uploaded yet. Upload a document to get started.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = sops.map(sop => createSOPCard(sop)).join('');
+        }
+
+        function createSOPCard(sop) {
+            const priorityClass = sop.priority_override ? 
+                `sop-priority-${sop.priority_override.toLowerCase()}` : '';
+            
+            const triggers = sop.triggers || [];
+            const triggerBadges = triggers.slice(0, 3).map(trigger => 
+                `<span class="badge bg-secondary trigger-badge">${trigger}</span>`
+            ).join('');
+            
+            const moreTriggersText = triggers.length > 3 ? 
+                `<span class="text-muted">+${triggers.length - 3} more</span>` : '';
+            
+            return `
+                <div class="card sop-card ${priorityClass}" onclick="showSOPDetails('${sop.sop_id}')">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="card-title mb-1">${sop.title}</h6>
+                                <small class="text-muted">${sop.category}</small>
+                                ${sop.priority_override ? 
+                                    `<span class="badge bg-primary ms-2">${sop.priority_override}</span>` : ''}
+                            </div>
+                            <small class="text-muted">${formatDate(sop.processed_date)}</small>
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Triggers:</strong>
+                            ${triggerBadges}
+                            ${moreTriggersText}
+                        </div>
+                        
+                        <div class="mb-2">
+                            <strong>Response Timeline:</strong> 
+                            <span class="text-primary">${sop.response_requirements?.timeline || 'Not specified'}</span>
+                        </div>
+                        
+                        <div>
+                            <small class="text-muted">
+                                <i class="fas fa-file me-1"></i>
+                                Source: ${sop.document_source}
+                                ${sop.special_conditions?.escalation_required ? 
+                                    '<i class="fas fa-exclamation-triangle text-warning ms-2" title="Escalation Required"></i>' : ''}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function searchSOPs() {
+            const query = document.getElementById('searchInput').value.trim();
+            const category = document.getElementById('searchFilters').value;
+            
+            if (!query) {
+                document.getElementById('searchResults').innerHTML = '';
+                return;
+            }
+            
+            let url = `/sop/search?query=${encodeURIComponent(query)}`;
+            if (category) {
+                url += `&category=${encodeURIComponent(category)}`;
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(results => {
+                    displaySearchResults(results, query);
+                })
+                .catch(error => {
+                    console.error('Search error:', error);
+                    document.getElementById('searchResults').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Search failed: ${error.message}
+                        </div>
+                    `;
+                });
+        }
+
+        function displaySearchResults(results, query) {
+            const container = document.getElementById('searchResults');
+            
+            if (!results || results.length === 0) {
+                container.innerHTML = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No SOPs found matching "${query}"
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <h6>Search Results (${results.length}):</h6>
+                ${results.map(result => `
+                    <div class="card mb-2" onclick="showSOPDetails('${result.sop_id}')">
+                        <div class="card-body py-2">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong>${result.title}</strong>
+                                    <small class="text-muted ms-2">Similarity: ${(result.similarity_score * 100).toFixed(0)}%</small>
+                                </div>
+                                ${result.priority_override ? 
+                                    `<span class="badge bg-primary">${result.priority_override}</span>` : ''}
+                            </div>
+                            <div class="mt-1">
+                                <small class="text-muted">
+                                    Matched triggers: ${result.matched_triggers.join(', ') || 'None'}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function showSOPDetails(sopId) {
+            const sop = currentSOPs.find(s => s.sop_id === sopId);
+            if (!sop) return;
+            
+            currentSOP = sop;
+            
+            const modalBody = document.getElementById('sopModalBody');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>${sop.title}</h6>
+                        <p class="text-muted">${sop.category}</p>
+                        
+                        <h6>Basic Information:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>SOP ID:</strong> ${sop.sop_id}</li>
+                            <li><strong>Category:</strong> ${sop.category}</li>
+                            <li><strong>Priority Override:</strong> ${sop.priority_override || 'None'}</li>
+                            <li><strong>Source Document:</strong> ${sop.document_source}</li>
+                            <li><strong>Processed:</strong> ${formatDate(sop.processed_date)}</li>
+                        </ul>
+                        
+                        <h6>Triggers:</h6>
+                        <div class="mb-3">
+                            ${(sop.triggers || []).map(trigger => 
+                                `<span class="badge bg-secondary me-1 mb-1">${trigger}</span>`
+                            ).join('')}
+                        </div>
+                        
+                        <h6>Response Requirements:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Timeline:</strong> ${sop.response_requirements?.timeline || 'Not specified'}</li>
+                            <li><strong>Notifications:</strong></li>
+                            <ul>
+                                ${(sop.response_requirements?.notifications || []).map(n => `<li>${n}</li>`).join('')}
+                            </ul>
+                            <li><strong>Required Actions:</strong></li>
+                            <ul>
+                                ${(sop.response_requirements?.required_actions || []).map(a => `<li>${a}</li>`).join('')}
+                            </ul>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Special Conditions:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Locations:</strong> ${(sop.special_conditions?.applies_to_locations || []).join(', ')}</li>
+                            <li><strong>Times:</strong> ${(sop.special_conditions?.applies_to_times || []).join(', ')}</li>
+                            <li><strong>Escalation Required:</strong> ${sop.special_conditions?.escalation_required ? 'Yes' : 'No'}</li>
+                        </ul>
+                        
+                        <h6>Regulatory Requirements:</h6>
+                        <div class="mb-3">
+                            ${(sop.regulatory_requirements || []).map(req => 
+                                `<span class="badge bg-info me-1 mb-1">${req}</span>`
+                            ).join('') || '<span class="text-muted">None specified</span>'}
+                        </div>
+                        
+                        <h6>Original Document Text:</h6>
+                        <div class="json-display">
+                            <pre>${sop.original_text || 'No original text available'}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            new bootstrap.Modal(document.getElementById('sopModal')).show();
+        }
+
+        function deleteSOP() {
+            if (!currentSOP) return;
+            
+            if (!confirm(`Are you sure you want to delete SOP "${currentSOP.title}"?`)) {
+                return;
+            }
+            
+            fetch(`/sop/${currentSOP.sop_id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                bootstrap.Modal.getInstance(document.getElementById('sopModal')).hide();
+                refreshSOPs();
+                refreshStats();
+                alert('SOP deleted successfully');
+            })
+            .catch(error => {
+                console.error('Delete error:', error);
+                alert('Failed to delete SOP: ' + error.message);
+            });
+        }
+
+        function showSOPError(message) {
+            document.getElementById('sopList').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Unknown';
+            return new Date(dateString).toLocaleDateString();
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshSOPs();
+            refreshStats();
+        });
+    </script>
+</body>
+</html>

@@ -11,7 +11,14 @@ from datetime import datetime
 import os
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('server.log')
+    ]
+)
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
@@ -39,10 +46,29 @@ app.include_router(simulation_router)
 # Initialize data loader on startup
 @app.on_event("startup")
 async def startup_event():
-    cv_csv_path = "/Users/celinebroomhead/Downloads/MockData_ComputerVision - Sheet2.csv"
-    access_csv_path = "/Users/celinebroomhead/Downloads/MockData_AccessControl - Sheet4.csv"
-    initialize_data_loader(cv_csv_path, access_csv_path)
-    logger.info("Data loader initialized")
+    try:
+        logger.info("Starting application startup...")
+        cv_csv_path = "/Users/celinebroomhead/Downloads/MockData_ComputerVision - Sheet2.csv"
+        access_csv_path = "/Users/celinebroomhead/Downloads/MockData_AccessControl - Sheet4.csv"
+        
+        logger.info(f"Initializing data loader with CV path: {cv_csv_path}")
+        logger.info(f"Initializing data loader with Access path: {access_csv_path}")
+        
+        initialize_data_loader(cv_csv_path, access_csv_path)
+        logger.info("Data loader initialized successfully")
+        
+        # Verify static files exist
+        import os
+        static_files = ['static/index.html', 'static/activities.html']
+        for file_path in static_files:
+            if os.path.exists(file_path):
+                logger.info(f"Static file found: {file_path}")
+            else:
+                logger.warning(f"Static file missing: {file_path}")
+                
+    except Exception as e:
+        logger.error(f"Startup error: {str(e)}")
+        raise
 
 # Health check endpoint
 @app.get("/health")
@@ -185,23 +211,30 @@ async def analyze_event(
 @app.get("/stats")
 async def get_statistics():
     """Get API usage statistics."""
-    # This would typically pull from a database or metrics system
-    # For now, return a simple response
-    return {
-        "service": "Security Triage Agent",
-        "version": "1.0.0",
-        "uptime": datetime.now().isoformat(),
-        "supported_event_types": [
-            "CV_Threat_Detection",
-            "Access_Control_System"
-        ],
-        "threat_levels": [
-            "CRITICAL",
-            "HIGH", 
-            "MEDIUM",
-            "LOW"
-        ]
-    }
+    try:
+        logger.info("Stats endpoint accessed")
+        # This would typically pull from a database or metrics system
+        # For now, return a simple response
+        stats = {
+            "service": "Security Triage Agent",
+            "version": "1.0.0",
+            "uptime": datetime.now().isoformat(),
+            "supported_event_types": [
+                "CV_Threat_Detection",
+                "Access_Control_System"
+            ],
+            "threat_levels": [
+                "CRITICAL",
+                "HIGH", 
+                "MEDIUM",
+                "LOW"
+            ]
+        }
+        logger.info("Stats generated successfully")
+        return stats
+    except Exception as e:
+        logger.error(f"Error generating stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Stats error: {str(e)}")
 
 # Configuration Info Endpoint
 @app.get("/config")
@@ -219,8 +252,41 @@ async def get_config():
 @app.get("/")
 async def dashboard():
     """Serve the simulation dashboard."""
-    from fastapi.responses import FileResponse
-    return FileResponse('static/index.html')
+    try:
+        logger.info("Dashboard route accessed")
+        from fastapi.responses import FileResponse
+        import os
+        
+        file_path = 'static/index.html'
+        if not os.path.exists(file_path):
+            logger.error(f"Dashboard file not found: {file_path}")
+            raise HTTPException(status_code=404, detail="Dashboard file not found")
+        
+        logger.info(f"Serving dashboard file: {file_path}")
+        return FileResponse(file_path)
+    except Exception as e:
+        logger.error(f"Error serving dashboard: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
+
+# Activities page endpoint
+@app.get("/activities")
+async def activities_page():
+    """Serve the activities dashboard."""
+    try:
+        logger.info("Activities page route accessed")
+        from fastapi.responses import FileResponse
+        import os
+        
+        file_path = 'static/activities.html'
+        if not os.path.exists(file_path):
+            logger.error(f"Activities file not found: {file_path}")
+            raise HTTPException(status_code=404, detail="Activities file not found")
+        
+        logger.info(f"Serving activities file: {file_path}")
+        return FileResponse(file_path)
+    except Exception as e:
+        logger.error(f"Error serving activities page: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Activities page error: {str(e)}")
 
 # API root endpoint
 @app.get("/api")
@@ -246,16 +312,31 @@ async def api_root():
 
 if __name__ == "__main__":
     import uvicorn
+    import signal
+    import sys
     
-    # Get configuration from environment
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", "8000"))
+    def signal_handler(sig, frame):
+        logger.info("Received shutdown signal, stopping server...")
+        sys.exit(0)
     
-    logger.info(f"Starting Security Triage Agent API on {host}:{port}")
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     
-    uvicorn.run(
-        app, 
-        host=host, 
-        port=port,
-        log_level="info"
-    )
+    try:
+        # Get configuration from environment
+        host = os.getenv("HOST", "127.0.0.1")
+        port = int(os.getenv("PORT", "8001"))
+        
+        logger.info(f"Starting Security Triage Agent API on {host}:{port}")
+        
+        uvicorn.run(
+            app, 
+            host=host, 
+            port=port,
+            log_level="info",
+            access_log=True,
+            reload=False
+        )
+    except Exception as e:
+        logger.error(f"Failed to start server: {str(e)}")
+        sys.exit(1)

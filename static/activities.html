@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Activities Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .activity-card {
+            border-left: 4px solid #007bff;
+            margin-bottom: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .activity-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Activity type colors */
+        .activity-health-safety {
+            border-left-color: #dc3545 !important;
+        }
+        .activity-perimeter-intrusion {
+            border-left-color: #fd7e14 !important;
+        }
+        .activity-policy-violation {
+            border-left-color: #ffc107 !important;
+        }
+        .activity-access-control {
+            border-left-color: #198754 !important;
+        }
+        
+        /* Threat level badges */
+        .threat-level-critical {
+            background-color: #dc3545;
+        }
+        .threat-level-high {
+            background-color: #fd7e14;
+        }
+        .threat-level-medium {
+            background-color: #ffc107;
+            color: #000;
+        }
+        .threat-level-low {
+            background-color: #198754;
+        }
+        
+        .activity-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+        
+        .filter-btn {
+            margin: 0.25rem;
+        }
+        
+        .activity-timestamp {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .priority-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+        
+        .priority-high {
+            background-color: #dc3545;
+        }
+        .priority-medium {
+            background-color: #ffc107;
+        }
+        .priority-low {
+            background-color: #198754;
+        }
+        
+        .json-display {
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+        }
+        
+        .activity-description {
+            color: #6c757d;
+            margin-bottom: 0.5rem;
+        }
+        
+        .location-info {
+            font-size: 0.875rem;
+            color: #495057;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-shield-alt me-2"></i>
+                Security Activities Dashboard
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="fas fa-tachometer-alt me-1"></i>
+                    Main Dashboard
+                </a>
+                <a class="nav-link active" href="/activities">
+                    <i class="fas fa-list-alt me-1"></i>
+                    Activities
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="h3 mb-3">
+                    <i class="fas fa-list-alt me-2"></i>
+                    Security Activities
+                </h1>
+                <p class="text-muted">Real-time security event monitoring and activity management</p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4" id="statsContainer">
+            <div class="col-md-3">
+                <div class="card stats-card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <h4 class="card-title" id="totalActivities">-</h4>
+                        <p class="card-text">Total Activities</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="background: linear-gradient(135deg, #dc3545, #c82333); color: white;">
+                    <div class="card-body text-center">
+                        <span class="activity-icon">🏥</span>
+                        <h4 class="card-title" id="healthSafetyCount">-</h4>
+                        <p class="card-text">Health & Safety</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="background: linear-gradient(135deg, #fd7e14, #e8630a); color: white;">
+                    <div class="card-body text-center">
+                        <span class="activity-icon">👣</span>
+                        <h4 class="card-title" id="perimeterCount">-</h4>
+                        <p class="card-text">Perimeter Intrusion</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100" style="background: linear-gradient(135deg, #198754, #145a41); color: white;">
+                    <div class="card-body text-center">
+                        <span class="activity-icon">🚪</span>
+                        <h4 class="card-title" id="accessControlCount">-</h4>
+                        <p class="card-text">Access Control</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-filter me-2"></i>
+                            Activity Filters
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Activity Type:</h6>
+                                <button class="btn btn-outline-primary filter-btn active" data-filter="all">
+                                    <i class="fas fa-list me-1"></i>
+                                    All Activities
+                                </button>
+                                <button class="btn btn-outline-danger filter-btn" data-filter="health & safety">
+                                    🏥 Health & Safety
+                                </button>
+                                <button class="btn btn-outline-warning filter-btn" data-filter="perimeter intrusion">
+                                    👣 Perimeter Intrusion
+                                </button>
+                                <button class="btn btn-outline-warning filter-btn" data-filter="policy-violation">
+                                    ⚠️ Policy Violation
+                                </button>
+                                <button class="btn btn-outline-success filter-btn" data-filter="access-control">
+                                    🚪 Access Control
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Quick Actions:</h6>
+                                <button class="btn btn-primary" onclick="generateActivities()">
+                                    <i class="fas fa-sync-alt me-1"></i>
+                                    Generate Activities
+                                </button>
+                                <button class="btn btn-info" onclick="refreshStats()">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    Refresh Stats
+                                </button>
+                                <button class="btn btn-secondary" onclick="clearActivities()">
+                                    <i class="fas fa-trash me-1"></i>
+                                    Clear All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cog me-2"></i>
+                            Generation Settings
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="activityCount" class="form-label">Activity Count:</label>
+                            <input type="range" class="form-range" id="activityCount" min="1" max="20" value="10">
+                            <div class="d-flex justify-content-between">
+                                <small>1</small>
+                                <small id="activityCountValue">10</small>
+                                <small>20</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activities List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-stream me-2"></i>
+                            Recent Activities
+                        </h5>
+                        <small class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            Last updated: <span id="lastUpdated">Never</span>
+                        </small>
+                    </div>
+                    <div class="card-body">
+                        <div id="activitiesContainer">
+                            <div class="text-center py-5">
+                                <i class="fas fa-plus-circle fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Click "Generate Activities" to start monitoring security events</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading Spinner -->
+                        <div id="loadingSpinner" class="text-center py-4" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 text-muted">Processing security events...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Detail Modal -->
+    <div class="modal fade" id="activityModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Activity Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="activityModalBody">
+                    <!-- Activity details will be populated here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentActivities = [];
+        let currentFilter = 'all';
+
+        // Update activity count display
+        document.getElementById('activityCount').addEventListener('input', function() {
+            document.getElementById('activityCountValue').textContent = this.value;
+        });
+
+        // Filter button handlers
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update active button
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update filter
+                currentFilter = this.getAttribute('data-filter');
+                filterActivities();
+            });
+        });
+
+        function generateActivities() {
+            const count = document.getElementById('activityCount').value;
+            const filterType = currentFilter === 'all' ? null : currentFilter;
+            
+            showLoading(true);
+            
+            let url = `/simulate/activities?count=${count}`;
+            if (filterType) {
+                url += `&activity_type=${encodeURIComponent(filterType)}`;
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        currentActivities = data.activities;
+                        displayActivities(currentActivities);
+                        updateLastUpdated();
+                        refreshStats();
+                    } else {
+                        throw new Error(data.message || 'Failed to generate activities');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error generating activities:', error);
+                    showError('Failed to generate activities: ' + error.message);
+                })
+                .finally(() => {
+                    showLoading(false);
+                });
+        }
+
+        function refreshStats() {
+            fetch('/simulate/activities/stats')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        updateStatsDisplay(data);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching stats:', error);
+                });
+        }
+
+        function updateStatsDisplay(stats) {
+            document.getElementById('totalActivities').textContent = stats.total_activities;
+            document.getElementById('healthSafetyCount').textContent = stats.type_breakdown['health & safety'] || 0;
+            document.getElementById('perimeterCount').textContent = stats.type_breakdown['perimeter intrusion'] || 0;
+            document.getElementById('accessControlCount').textContent = stats.type_breakdown['access-control'] || 0;
+        }
+
+        function displayActivities(activities) {
+            const container = document.getElementById('activitiesContainer');
+            
+            if (!activities || activities.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-exclamation-circle fa-3x text-warning mb-3"></i>
+                        <p class="text-muted">No activities found with current filters</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = activities.map(activity => createActivityCard(activity)).join('');
+        }
+
+        function createActivityCard(activity) {
+            const typeClass = `activity-${activity.type.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+            const threatLevel = activity.threat_level?.toLowerCase() || 'unknown';
+            const priorityClass = getPriorityClass(activity.priority_score);
+            
+            return `
+                <div class="card activity-card ${typeClass}" onclick="showActivityDetails('${activity.id}')">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center">
+                                <span class="activity-icon">${activity.icon}</span>
+                                <div>
+                                    <h6 class="card-title mb-1">${activity.title}</h6>
+                                    <small class="text-muted">${activity.type}</small>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge threat-level-${threatLevel}">${activity.threat_level}</span>
+                                <div class="mt-1">
+                                    <span class="priority-indicator ${priorityClass}"></span>
+                                    <small class="text-muted">Priority: ${activity.priority_score}/10</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="activity-description">${activity.description}</p>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="location-info">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    ${activity.location.building}${activity.location.camera ? ' - ' + activity.location.camera : ''}
+                                    ${activity.location.device ? ' - ' + activity.location.device : ''}
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <div class="activity-timestamp">
+                                    <i class="fas fa-clock me-1"></i>
+                                    ${formatTimestamp(activity.timestamp)}
+                                </div>
+                                <div class="activity-timestamp">
+                                    <i class="fas fa-percentage me-1"></i>
+                                    Confidence: ${(activity.confidence * 100).toFixed(0)}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getPriorityClass(score) {
+            if (score >= 8) return 'priority-high';
+            if (score >= 5) return 'priority-medium';
+            return 'priority-low';
+        }
+
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'Unknown time';
+            const date = new Date(parseInt(timestamp) * 1000);
+            return date.toLocaleString();
+        }
+
+        function showActivityDetails(activityId) {
+            const activity = currentActivities.find(a => a.id === activityId);
+            if (!activity) return;
+
+            const modalBody = document.getElementById('activityModalBody');
+            modalBody.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><span class="activity-icon">${activity.icon}</span> ${activity.title}</h6>
+                        <p class="text-muted">${activity.description}</p>
+                        
+                        <h6>Activity Details:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Type:</strong> ${activity.type}</li>
+                            <li><strong>Threat Level:</strong> <span class="badge threat-level-${activity.threat_level.toLowerCase()}">${activity.threat_level}</span></li>
+                            <li><strong>Priority Score:</strong> ${activity.priority_score}/10</li>
+                            <li><strong>Confidence:</strong> ${(activity.confidence * 100).toFixed(0)}%</li>
+                            <li><strong>Source:</strong> ${activity.source}</li>
+                        </ul>
+                        
+                        <h6>Location:</h6>
+                        <ul class="list-unstyled">
+                            <li><strong>Building:</strong> ${activity.location.building}</li>
+                            ${activity.location.camera ? `<li><strong>Camera:</strong> ${activity.location.camera}</li>` : ''}
+                            ${activity.location.device ? `<li><strong>Device:</strong> ${activity.location.device}</li>` : ''}
+                            <li><strong>Zone:</strong> ${activity.location.zone}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Analysis Results:</h6>
+                        <div class="json-display">
+                            <pre><code>${JSON.stringify(activity.analysis_result, null, 2)}</code></pre>
+                        </div>
+                        
+                        <h6>Original Event Data:</h6>
+                        <div class="json-display">
+                            <pre><code>${JSON.stringify(activity.original_event, null, 2)}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            new bootstrap.Modal(document.getElementById('activityModal')).show();
+        }
+
+        function filterActivities() {
+            if (currentFilter === 'all') {
+                displayActivities(currentActivities);
+            } else {
+                const filtered = currentActivities.filter(activity => activity.type === currentFilter);
+                displayActivities(filtered);
+            }
+        }
+
+        function clearActivities() {
+            currentActivities = [];
+            displayActivities([]);
+            updateLastUpdated();
+            
+            // Reset stats
+            document.getElementById('totalActivities').textContent = '0';
+            document.getElementById('healthSafetyCount').textContent = '0';
+            document.getElementById('perimeterCount').textContent = '0';
+            document.getElementById('accessControlCount').textContent = '0';
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingSpinner').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const container = document.getElementById('activitiesContainer');
+            container.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    ${message}
+                </div>
+            `;
+        }
+
+        function updateLastUpdated() {
+            document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStats();
+        });
+    </script>
+</body>
+</html>

@@ -5,7 +5,7 @@ from sop.router import router as sop_router
 
 # Mock imports for testing without CrewAI
 try:
-    from agents.triage_agent import run_triage_analysis, batch_analyze_events
+    from agents.triage_agent import run_triage_analysis, batch_analyze_events, run_sop_enhanced_analysis
     from models.event_models import CVThreatEvent, AccessControlEvent, TriageAnalysis
     from simulation.simulator import router as simulation_router, initialize_data_loader
     FULL_FEATURES = True
@@ -40,6 +40,21 @@ except ImportError:
     
     def batch_analyze_events(events):
         return [run_triage_analysis(event['data'], event['type']) for event in events]
+    
+    def run_sop_enhanced_analysis(event_data, event_type):
+        return {
+            "event_type": event_type,
+            "final_threat_level": "MEDIUM",
+            "final_priority_score": 7,
+            "confidence_score": 0.8,
+            "merged_response_actions": ["Review event with SOP consultation", "Check organizational procedures"],
+            "escalation_required": False,
+            "response_timeline": "15 minutes",
+            "sop_influence_reasoning": "SOP system not available in mock mode",
+            "event_summary": f"Mock SOP-enhanced analysis for {event_type}",
+            "regulatory_requirements": [],
+            "applicable_sops": []
+        }
     
     simulation_router = None
     initialize_data_loader = lambda *args: None
@@ -102,6 +117,18 @@ async def startup_event():
             logger.info("Running in SOP-only mode for testing")
         logger.info("Data loader initialized successfully")
         
+        # Validate SOP database connection
+        try:
+            from agents.tools.sop_search import SOPContextualSearch
+            sop_search = SOPContextualSearch()
+            db_valid, db_message = sop_search.validate_database_connection()
+            if db_valid:
+                logger.info(f"SOP database validation successful: {db_message}")
+            else:
+                logger.warning(f"SOP database validation failed: {db_message}")
+        except Exception as e:
+            logger.error(f"SOP database validation error: {e}")
+        
         # Verify static files exist
         import os
         static_files = ['static/index.html', 'static/activities.html']
@@ -124,6 +151,87 @@ async def health_check():
         "timestamp": datetime.now().isoformat(),
         "service": "Security Triage Agent"
     }
+
+# SOP-Enhanced CV Threat Analysis Endpoint
+@app.post("/analyze/cv-threat-sop", response_model=Dict[str, Any])
+async def analyze_cv_threat_with_sop(event: CVThreatEvent):
+    """Analyze computer vision threat detection event with SOP consultation."""
+    try:
+        logger.info(f"Analyzing CV threat event with SOP consultation: {event.record_id}")
+        
+        # Convert event to dict for analysis
+        event_dict = event.dict()
+        
+        # Run SOP-enhanced triage analysis
+        result = run_sop_enhanced_analysis(event_dict, "CV_Threat_Detection")
+        
+        logger.info(f"SOP-enhanced CV analysis completed for {event.record_id}: {result.get('final_threat_level', 'UNKNOWN')}")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error in SOP-enhanced CV threat analysis for {event.record_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"SOP-enhanced analysis failed: {str(e)}"
+        )
+
+# SOP-Enhanced Access Control Analysis Endpoint
+@app.post("/analyze/access-control-sop", response_model=Dict[str, Any])
+async def analyze_access_control_with_sop(event: AccessControlEvent):
+    """Analyze access control system event with SOP consultation."""
+    try:
+        logger.info(f"Analyzing access control event with SOP consultation: {event.alarm_id}")
+        
+        # Convert event to dict for analysis
+        event_dict = event.dict()
+        
+        # Run SOP-enhanced triage analysis
+        result = run_sop_enhanced_analysis(event_dict, "Access_Control_System")
+        
+        logger.info(f"SOP-enhanced access control analysis completed for {event.alarm_id}: {result.get('final_threat_level', 'UNKNOWN')}")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error in SOP-enhanced access control analysis for {event.alarm_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"SOP-enhanced analysis failed: {str(e)}"
+        )
+
+# Generic SOP-Enhanced Analysis Endpoint
+@app.post("/analyze/sop-enhanced")
+async def analyze_event_with_sop(
+    event_data: Dict[str, Any],
+    event_type: str
+):
+    """Generic SOP-enhanced event analysis endpoint."""
+    try:
+        valid_types = ["CV_Threat_Detection", "Access_Control_System"]
+        if event_type not in valid_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid event type: {event_type}. Must be one of: {valid_types}"
+            )
+        
+        logger.info(f"Analyzing {event_type} event with SOP consultation")
+        
+        # Run SOP-enhanced analysis
+        result = run_sop_enhanced_analysis(event_data, event_type)
+        
+        logger.info(f"SOP-enhanced analysis completed: {result.get('final_threat_level', 'UNKNOWN')}")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in SOP-enhanced event analysis: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"SOP-enhanced analysis failed: {str(e)}"
+        )
 
 # CV Threat Analysis Endpoint
 @app.post("/analyze/cv-threat", response_model=Dict[str, Any])
@@ -347,8 +455,12 @@ async def api_root():
             "simulation": "/simulate",
             "cv_threat_analysis": "/analyze/cv-threat",
             "access_control_analysis": "/analyze/access-control",
+            "sop_enhanced_cv_analysis": "/analyze/cv-threat-sop",
+            "sop_enhanced_access_control_analysis": "/analyze/access-control-sop",
+            "sop_enhanced_generic_analysis": "/analyze/sop-enhanced",
             "batch_analysis": "/analyze/batch",
             "generic_analysis": "/analyze",
+            "sop_management": "/sop/",
             "statistics": "/stats",
             "configuration": "/config"
         },

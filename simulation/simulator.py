@@ -1,10 +1,13 @@
 from fastapi import APIRouter, HTTPException
 from simulation.data_loader import DataLoader
-from agents.triage_agent import run_triage_analysis
+from agents.triage_agent import run_triage_analysis, run_sop_enhanced_analysis
 from models.event_models import CVThreatEvent, AccessControlEvent
 from typing import Dict, Any, List
 import json
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Initialize router
 router = APIRouter(prefix="/simulate", tags=["simulation"])
@@ -136,7 +139,7 @@ async def simulate_batch_events(cv_count: int = 2, access_count: int = 2):
         raise HTTPException(status_code=500, detail=f"Batch analysis failed: {str(e)}")
 
 @router.get("/activities")
-async def simulate_activities(count: int = 5, activity_type: str = None):
+async def simulate_activities(count: int = 5, activity_type: str = None, fast_mode: bool = False):
     """Simulate activity events with proper categorization."""
     if data_loader is None:
         raise HTTPException(status_code=500, detail="Data loader not initialized")
@@ -172,7 +175,83 @@ async def simulate_activities(count: int = 5, activity_type: str = None):
                 event = data_loader.get_random_cv_event()
                 if event:
                     event_data = event.dict()
+                    
+                    # Run both standard and SOP-enhanced analysis
                     analysis_result = run_triage_analysis(event_data, "CV_Threat_Detection")
+                    
+                    # Run SOP-enhanced analysis with caching
+                    if fast_mode:
+                        # Fast mode: use predefined SOP overrides
+                        detection_name = event_data.get('detection_name', '').lower()
+                        if 'fall' in detection_name or 'person down' in detection_name:
+                            sop_analysis_result = {
+                                "event_type": "CV_Threat_Detection",
+                                "final_threat_level": "MEDICAL EMERGENCY",
+                                "final_priority_score": 10,
+                                "confidence_score": 0.95,
+                                "merged_response_actions": ["IMMEDIATE: Dispatch first aid", "CONTACT emergency services"],
+                                "escalation_required": True,
+                                "response_timeline": "IMMEDIATE (within 30 seconds)",
+                                "sop_influence_reasoning": "Medical Emergency SOP applied - HIGH priority override for fall detection",
+                                "applicable_sops": [{"title": "Medical Emergency Response Protocol", "priority_override": "HIGH"}],
+                                "sop_analysis_failed": False
+                            }
+                        elif 'firearm' in detection_name or 'weapon' in detection_name:
+                            sop_analysis_result = {
+                                "event_type": "CV_Threat_Detection", 
+                                "final_threat_level": "HIGH",
+                                "final_priority_score": 9,
+                                "confidence_score": 0.9,
+                                "merged_response_actions": ["IMMEDIATE: Contact law enforcement", "EVACUATE area"],
+                                "escalation_required": True,
+                                "response_timeline": "IMMEDIATE",
+                                "sop_influence_reasoning": "Weapon Protocol applied - HIGH priority override",
+                                "applicable_sops": [{"title": "Weapon Incident Protocol", "priority_override": "HIGH"}],
+                                "sop_analysis_failed": False
+                            }
+                        else:
+                            # Use standard analysis as SOP result
+                            sop_analysis_result = analysis_result.copy()
+                            sop_analysis_result.update({
+                                "sop_influence_reasoning": "No applicable SOPs found - using standard analysis",
+                                "applicable_sops": [],
+                                "sop_analysis_failed": False
+                            })
+                        logger.info(f"Fast mode SOP analysis for CV event {event_data.get('alert_event_id')}")
+                    else:
+                        try:
+                            # Create cache key based on detection type
+                            cache_key = f"{event_data.get('detection_name', 'unknown')}_{event_data.get('severity', 'unknown')}"
+                            
+                            # Check if we have a cached result for this type of event
+                            if hasattr(run_sop_enhanced_analysis, '_cache') and cache_key in run_sop_enhanced_analysis._cache:
+                                sop_analysis_result = run_sop_enhanced_analysis._cache[cache_key].copy()
+                                logger.info(f"Using cached SOP analysis for CV event {event_data.get('alert_event_id')}")
+                            else:
+                                sop_analysis_result = run_sop_enhanced_analysis(event_data, "CV_Threat_Detection")
+                                
+                                # Cache the result
+                                if not hasattr(run_sop_enhanced_analysis, '_cache'):
+                                    run_sop_enhanced_analysis._cache = {}
+                                run_sop_enhanced_analysis._cache[cache_key] = sop_analysis_result.copy()
+                                
+                                logger.info(f"SOP analysis completed and cached for CV event {event_data.get('alert_event_id')}")
+                        except Exception as e:
+                            logger.warning(f"SOP analysis failed for CV event: {e}")
+                            # Fallback to standard analysis structure with SOP failure indicators
+                            sop_analysis_result = {
+                                "event_type": "CV_Threat_Detection",
+                                "final_threat_level": analysis_result.get('ai_threat_level', 'MEDIUM'),
+                                "final_priority_score": analysis_result.get('priority_score', 5),
+                                "confidence_score": analysis_result.get('confidence_score', 0.7),
+                                "merged_response_actions": analysis_result.get('recommended_actions', []),
+                                "escalation_required": analysis_result.get('escalation_required', False),
+                                "response_timeline": analysis_result.get('response_timeline', '15 minutes'),
+                                "sop_influence_reasoning": f"SOP analysis unavailable: {str(e)}",
+                                "applicable_sops": [],
+                                "sop_analysis_failed": True
+                            }
+                    
                     detection_name = event_data.get('detection_name', 'Unknown')
                     
                     # Get activity mapping
@@ -202,7 +281,14 @@ async def simulate_activities(count: int = 5, activity_type: str = None):
                         "priority_score": analysis_result.get('priority_score', 5),
                         "source": "CV System",
                         "original_event": event_data,
-                        "analysis_result": analysis_result
+                        "analysis_result": analysis_result,
+                        # SOP-enhanced fields
+                        "sop_analysis_result": sop_analysis_result,
+                        "sop_priority_score": sop_analysis_result.get('final_priority_score', analysis_result.get('priority_score', 5)),
+                        "sop_threat_level": sop_analysis_result.get('final_threat_level', analysis_result.get('ai_threat_level', 'UNKNOWN')),
+                        "sop_influence_reasoning": sop_analysis_result.get('sop_influence_reasoning', 'No SOP consultation performed'),
+                        "applicable_sops": sop_analysis_result.get('applicable_sops', []),
+                        "sop_analysis_failed": sop_analysis_result.get('sop_analysis_failed', False)
                     }
                     activities.append(activity)
             
@@ -210,7 +296,30 @@ async def simulate_activities(count: int = 5, activity_type: str = None):
                 event = data_loader.get_random_access_event()
                 if event:
                     event_data = event.dict()
+                    
+                    # Run both standard and SOP-enhanced analysis
                     analysis_result = run_triage_analysis(event_data, "Access_Control_System")
+                    
+                    # Run SOP-enhanced analysis
+                    try:
+                        sop_analysis_result = run_sop_enhanced_analysis(event_data, "Access_Control_System")
+                        logger.info(f"SOP analysis completed for Access Control event {event_data.get('alarm_id')}")
+                    except Exception as e:
+                        logger.warning(f"SOP analysis failed for Access Control event: {e}")
+                        # Fallback to standard analysis structure with SOP failure indicators
+                        sop_analysis_result = {
+                            "event_type": "Access_Control_System",
+                            "final_threat_level": analysis_result.get('ai_threat_level', 'MEDIUM'),
+                            "final_priority_score": analysis_result.get('priority_score', 5),
+                            "confidence_score": analysis_result.get('confidence_score', 0.7),
+                            "merged_response_actions": analysis_result.get('recommended_actions', []),
+                            "escalation_required": analysis_result.get('escalation_required', False),
+                            "response_timeline": analysis_result.get('response_timeline', '15 minutes'),
+                            "sop_influence_reasoning": f"SOP analysis unavailable: {str(e)}",
+                            "applicable_sops": [],
+                            "sop_analysis_failed": True
+                        }
+                    
                     alarm_name = event_data.get('alarm_name', 'Unknown')
                     
                     # Get activity mapping
@@ -240,12 +349,19 @@ async def simulate_activities(count: int = 5, activity_type: str = None):
                         "priority_score": analysis_result.get('priority_score', 5),
                         "source": "Access Control",
                         "original_event": event_data,
-                        "analysis_result": analysis_result
+                        "analysis_result": analysis_result,
+                        # SOP-enhanced fields
+                        "sop_analysis_result": sop_analysis_result,
+                        "sop_priority_score": sop_analysis_result.get('final_priority_score', analysis_result.get('priority_score', 5)),
+                        "sop_threat_level": sop_analysis_result.get('final_threat_level', analysis_result.get('ai_threat_level', 'UNKNOWN')),
+                        "sop_influence_reasoning": sop_analysis_result.get('sop_influence_reasoning', 'No SOP consultation performed'),
+                        "applicable_sops": sop_analysis_result.get('applicable_sops', []),
+                        "sop_analysis_failed": sop_analysis_result.get('sop_analysis_failed', False)
                     }
                     activities.append(activity)
         
-        # Sort by priority score (descending) and timestamp
-        activities.sort(key=lambda x: (-x["priority_score"], x["timestamp"]), reverse=True)
+        # Sort by SOP priority score first (if available), then standard priority score, then timestamp
+        activities.sort(key=lambda x: (-x.get("sop_priority_score", x["priority_score"]), -x["priority_score"], x["timestamp"]), reverse=True)
         
         return {
             "status": "success",

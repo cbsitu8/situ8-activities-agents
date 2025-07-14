@@ -13,14 +13,20 @@ logger = logging.getLogger(__name__)
 class VectorIndexer:
     """Simple SQLite-based storage for SOPs without vector embeddings for testing"""
     
-    def __init__(self, db_path: str = "./sop_knowledge_base.db"):
+    def __init__(self, db_path: str = None):
         try:
-            # Initialize SQLite database
-            self.db_path = db_path
-            os.makedirs(os.path.dirname(db_path) if os.path.dirname(db_path) else '.', exist_ok=True)
+            # Initialize SQLite database with consistent path
+            if db_path is None:
+                db_path = os.getenv('SOP_DATABASE_PATH', './sop_knowledge_base.db')
+            self.db_path = os.path.abspath(db_path)
+            
+            # Ensure directory exists
+            db_dir = os.path.dirname(self.db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
             
             # Create database and table
-            self.conn = sqlite3.connect(db_path, check_same_thread=False)
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
             self.conn.execute('''
                 CREATE TABLE IF NOT EXISTS sops (
                     sop_id TEXT PRIMARY KEY,

@@ -1,0 +1,140 @@
+alert_event_id,severity,site_name,detection_name,creation_time,camera_name,readers_name
+CVA-001,High,Building A,Person Brandishing Firearm,2025-06-09 0:15:23,CAM-001,
+CVA-002,Medium,Building B,Door Propped Open,2025-06-09 0:42:17,CAM-002,READER-001
+CVA-003,High,Building C,Smoke or Fire,2025-06-09 1:08:45,CAM-003,
+CVA-004,Medium,Building A,Person Jumping Fence,2025-06-09 1:33:52,CAM-004,
+CVA-005,High,Building B,Person Falling Down,2025-06-09 2:01:29,CAM-005,
+CVA-006,Medium,Building C,Tailgating,2025-06-09 2:27:18,CAM-006,READER-002
+CVA-007,High,Building A,Person Brandishing Firearm,2025-06-09 2:54:36,CAM-007,
+CVA-008,Medium,Building B,Door Propped Open,2025-06-09 3:19:44,CAM-008,READER-003
+CVA-009,High,Building C,Smoke or Fire,2025-06-09 3:46:12,CAM-009,
+CVA-010,Medium,Building A,Person Jumping Fence,2025-06-09 4:12:58,CAM-010,
+CVA-011,High,Building B,Person Falling Down,2025-06-09 4:38:25,CAM-011,
+CVA-012,Medium,Building C,Tailgating,2025-06-09 5:05:41,CAM-012,READER-004
+CVA-013,High,Building A,Person Brandishing Firearm,2025-06-09 5:32:19,CAM-013,
+CVA-014,Medium,Building B,Door Propped Open,2025-06-09 5:58:33,CAM-014,READER-005
+CVA-015,High,Building C,Smoke or Fire,2025-06-09 6:24:47,CAM-015,
+CVA-016,Medium,Building A,Person Jumping Fence,2025-06-09 6:51:15,CAM-016,
+CVA-017,High,Building B,Person Falling Down,2025-06-09 7:17:29,CAM-017,
+CVA-018,Medium,Building C,Tailgating,2025-06-09 7:43:52,CAM-018,READER-006
+CVA-019,High,Building A,Person Brandishing Firearm,2025-06-09 8:10:38,CAM-019,
+CVA-020,Medium,Building B,Door Propped Open,2025-06-09 8:36:24,CAM-020,READER-007
+CVA-021,High,Building C,Smoke or Fire,2025-06-09 9:02:51,CAM-021,
+CVA-022,Medium,Building A,Person Jumping Fence,2025-06-09 9:29:17,CAM-022,
+CVA-023,High,Building B,Person Falling Down,2025-06-09 9:55:43,CAM-023,
+CVA-024,Medium,Building C,Tailgating,2025-06-09 10:22:35,CAM-024,READER-008
+CVA-025,High,Building A,Person Brandishing Firearm,2025-06-09 10:48:19,CAM-025,
+CVA-026,Medium,Building B,Door Propped Open,2025-06-09 11:14:42,CAM-026,READER-009
+CVA-027,High,Building C,Smoke or Fire,2025-06-09 11:41:28,CAM-027,
+CVA-028,Medium,Building A,Person Jumping Fence,2025-06-09 12:07:56,CAM-028,
+CVA-029,High,Building B,Person Falling Down,2025-06-09 12:34:12,CAM-029,
+CVA-030,Medium,Building C,Tailgating,2025-06-09 13:00:39,CAM-030,READER-010
+CVA-031,High,Building A,Person Brandishing Firearm,2025-06-09 13:27:25,CAM-031,
+CVA-032,Medium,Building B,Door Propped Open,2025-06-09 13:53:48,CAM-032,READER-011
+CVA-033,High,Building C,Smoke or Fire,2025-06-09 14:20:14,CAM-033,
+CVA-034,Medium,Building A,Person Jumping Fence,2025-06-09 14:46:57,CAM-034,
+CVA-035,High,Building B,Person Falling Down,2025-06-09 15:13:21,CAM-035,
+CVA-036,Medium,Building C,Tailgating,2025-06-09 15:39:44,CAM-036,READER-012
+CVA-037,High,Building A,Person Brandishing Firearm,2025-06-09 16:06:18,CAM-037,
+CVA-038,Medium,Building B,Door Propped Open,2025-06-09 16:32:55,CAM-038,READER-013
+CVA-039,High,Building C,Smoke or Fire,2025-06-09 16:59:12,CAM-039,
+CVA-040,Medium,Building A,Person Jumping Fence,2025-06-09 17:25:38,CAM-040,
+CVA-041,High,Building B,Person Falling Down,2025-06-09 17:52:24,CAM-041,
+CVA-042,Medium,Building C,Tailgating,2025-06-09 18:18:47,CAM-042,READER-014
+CVA-043,High,Building A,Person Brandishing Firearm,2025-06-09 18:45:15,CAM-043,
+CVA-044,Medium,Building B,Door Propped Open,2025-06-09 19:11:39,CAM-044,READER-015
+CVA-045,High,Building C,Smoke or Fire,2025-06-09 19:38:26,CAM-045,
+CVA-046,Medium,Building A,Person Jumping Fence,2025-06-09 20:04:52,CAM-046,
+CVA-047,High,Building B,Person Falling Down,2025-06-09 20:31:18,CAM-047,
+CVA-048,Medium,Building C,Tailgating,2025-06-09 20:57:41,CAM-048,READER-016
+CVA-049,High,Building A,Person Brandishing Firearm,2025-06-09 21:24:17,CAM-049,
+CVA-050,Medium,Building B,Door Propped Open,2025-06-09 21:50:33,CAM-050,READER-017
+CVA-051,High,Building C,Smoke or Fire,2025-06-09 22:16:58,CAM-051,
+CVA-052,Medium,Building A,Person Jumping Fence,2025-06-09 22:43:24,CAM-052,
+CVA-053,High,Building B,Person Falling Down,2025-06-09 23:09:47,CAM-053,
+CVA-054,Medium,Building C,Tailgating,2025-06-09 23:36:13,CAM-054,READER-018
+CVA-055,High,Building A,Person Brandishing Firearm,2025-06-10 0:02:39,CAM-055,
+CVA-056,Medium,Building B,Door Propped Open,2025-06-10 0:29:15,CAM-056,READER-019
+CVA-057,High,Building C,Smoke or Fire,2025-06-10 0:55:42,CAM-057,
+CVA-058,Medium,Building A,Person Jumping Fence,2025-06-10 1:22:18,CAM-058,
+CVA-059,High,Building B,Person Falling Down,2025-06-10 1:48:34,CAM-059,
+CVA-060,Medium,Building C,Tailgating,2025-06-10 2:15:17,CAM-060,READER-020
+CVA-061,High,Building A,Person Brandishing Firearm,2025-06-10 2:41:53,CAM-061,
+CVA-062,Medium,Building B,Door Propped Open,2025-06-10 3:08:26,CAM-062,READER-021
+CVA-063,High,Building C,Smoke or Fire,2025-06-10 3:34:49,CAM-063,
+CVA-064,Medium,Building A,Person Jumping Fence,2025-06-10 4:01:25,CAM-064,
+CVA-065,High,Building B,Person Falling Down,2025-06-10 4:27:48,CAM-065,
+CVA-066,Medium,Building C,Tailgating,2025-06-10 4:54:14,CAM-066,READER-022
+CVA-067,High,Building A,Person Brandishing Firearm,2025-06-10 5:20:37,CAM-067,
+CVA-068,Medium,Building B,Door Propped Open,2025-06-10 5:47:13,CAM-068,READER-023
+CVA-069,High,Building C,Smoke or Fire,2025-06-10 6:13:56,CAM-069,
+CVA-070,Medium,Building A,Person Jumping Fence,2025-06-10 6:40:22,CAM-070,
+CVA-071,High,Building B,Person Falling Down,2025-06-10 7:06:45,CAM-071,
+CVA-072,Medium,Building C,Tailgating,2025-06-10 7:33:18,CAM-072,READER-024
+CVA-073,High,Building A,Person Brandishing Firearm,2025-06-10 7:59:44,CAM-073,
+CVA-074,Medium,Building B,Door Propped Open,2025-06-10 8:26:17,CAM-074,READER-025
+CVA-075,High,Building C,Smoke or Fire,2025-06-10 8:52:43,CAM-075,
+CVA-076,Medium,Building A,Person Jumping Fence,2025-06-10 9:19:26,CAM-076,
+CVA-077,High,Building B,Person Falling Down,2025-06-10 9:45:52,CAM-077,
+CVA-078,Medium,Building C,Tailgating,2025-06-10 10:12:15,CAM-078,READER-026
+CVA-079,High,Building A,Person Brandishing Firearm,2025-06-10 10:38:41,CAM-079,
+CVA-080,Medium,Building B,Door Propped Open,2025-06-10 11:05:28,CAM-080,READER-027
+CVA-081,High,Building C,Smoke or Fire,2025-06-10 11:31:54,CAM-081,
+CVA-082,Medium,Building A,Person Jumping Fence,2025-06-10 11:58:17,CAM-082,
+CVA-083,High,Building B,Person Falling Down,2025-06-10 12:24:43,CAM-083,
+CVA-084,Medium,Building C,Tailgating,2025-06-10 12:51:26,CAM-084,READER-028
+CVA-085,High,Building A,Person Brandishing Firearm,2025-06-10 13:17:52,CAM-085,
+CVA-086,Medium,Building B,Door Propped Open,2025-06-10 13:44:15,CAM-086,READER-029
+CVA-087,High,Building C,Smoke or Fire,2025-06-10 14:10:38,CAM-087,
+CVA-088,Medium,Building A,Person Jumping Fence,2025-06-10 14:37:24,CAM-088,
+CVA-089,High,Building B,Person Falling Down,2025-06-10 15:03:47,CAM-089,
+CVA-090,Medium,Building C,Tailgating,2025-06-10 15:30:13,CAM-090,READER-030
+CVA-091,High,Building A,Person Brandishing Firearm,2025-06-10 15:56:39,CAM-091,
+CVA-092,Medium,Building B,Door Propped Open,2025-06-10 16:23:22,CAM-092,READER-031
+CVA-093,High,Building C,Smoke or Fire,2025-06-10 16:49:45,CAM-093,
+CVA-094,Medium,Building A,Person Jumping Fence,2025-06-10 17:16:18,CAM-094,
+CVA-095,High,Building B,Person Falling Down,2025-06-10 17:42:54,CAM-095,
+CVA-096,Medium,Building C,Tailgating,2025-06-10 18:09:17,CAM-096,READER-032
+CVA-097,High,Building A,Person Brandishing Firearm,2025-06-10 18:35:43,CAM-097,
+CVA-098,Medium,Building B,Door Propped Open,2025-06-10 19:02:26,CAM-098,READER-033
+CVA-099,High,Building C,Smoke or Fire,2025-06-10 19:28:49,CAM-099,
+CVA-100,Medium,Building A,Person Jumping Fence,2025-06-10 19:55:15,CAM-100,
+CVA-101,High,Building B,Person Falling Down,2025-06-10 20:21:38,CAM-101,
+CVA-102,Medium,Building C,Tailgating,2025-06-10 20:48:24,CAM-102,READER-034
+CVA-103,High,Building A,Person Brandishing Firearm,2025-06-10 21:14:47,CAM-103,
+CVA-104,Medium,Building B,Door Propped Open,2025-06-10 21:41:13,CAM-104,READER-035
+CVA-105,High,Building C,Smoke or Fire,2025-06-10 22:07:56,CAM-105,
+CVA-106,Medium,Building A,Person Jumping Fence,2025-06-10 22:34:22,CAM-106,
+CVA-107,High,Building B,Person Falling Down,2025-06-10 23:00:45,CAM-107,
+CVA-108,Medium,Building C,Tailgating,2025-06-10 23:27:18,CAM-108,READER-036
+CVA-109,High,Building A,Person Brandishing Firearm,2025-06-10 23:53:44,CAM-109,
+CVA-110,Medium,Building B,Door Propped Open,2025-06-11 0:20:17,CAM-110,READER-037
+CVA-111,High,Building C,Smoke or Fire,2025-06-11 0:46:53,CAM-111,
+CVA-112,Medium,Building A,Person Jumping Fence,2025-06-11 1:13:26,CAM-112,
+CVA-113,High,Building B,Person Falling Down,2025-06-11 1:39:49,CAM-113,
+CVA-114,Medium,Building C,Tailgating,2025-06-11 2:06:15,CAM-114,READER-038
+CVA-115,High,Building A,Person Brandishing Firearm,2025-06-11 2:32:38,CAM-115,
+CVA-116,Medium,Building B,Door Propped Open,2025-06-11 2:59:24,CAM-116,READER-039
+CVA-117,High,Building C,Smoke or Fire,2025-06-11 3:25:47,CAM-117,
+CVA-118,Medium,Building A,Person Jumping Fence,2025-06-11 3:52:13,CAM-118,
+CVA-119,High,Building B,Person Falling Down,2025-06-11 4:18:56,CAM-119,
+CVA-120,Medium,Building C,Tailgating,2025-06-11 4:45:22,CAM-120,READER-040
+CVA-121,High,Building A,Person Brandishing Firearm,2025-06-11 5:11:45,CAM-121,
+CVA-122,Medium,Building B,Door Propped Open,2025-06-11 5:38:18,CAM-122,READER-041
+CVA-123,High,Building C,Smoke or Fire,2025-06-11 6:04:54,CAM-123,
+CVA-124,Medium,Building A,Person Jumping Fence,2025-06-11 6:31:17,CAM-124,
+CVA-125,High,Building B,Person Falling Down,2025-06-11 6:57:43,CAM-125,
+CVA-126,Medium,Building C,Tailgating,2025-06-11 7:24:26,CAM-126,READER-042
+CVA-127,High,Building A,Person Brandishing Firearm,2025-06-11 7:50:52,CAM-127,
+CVA-128,Medium,Building B,Door Propped Open,2025-06-11 8:17:15,CAM-128,READER-043
+CVA-129,High,Building C,Smoke or Fire,2025-06-11 8:43:38,CAM-129,
+CVA-130,Medium,Building A,Person Jumping Fence,2025-06-11 9:10:24,CAM-130,
+CVA-131,High,Building B,Person Falling Down,2025-06-11 9:36:47,CAM-131,
+CVA-132,Medium,Building C,Tailgating,2025-06-11 10:03:13,CAM-132,READER-044
+CVA-133,High,Building A,Person Brandishing Firearm,2025-06-11 10:29:56,CAM-133,
+CVA-134,Medium,Building B,Door Propped Open,2025-06-11 10:56:22,CAM-134,READER-045
+CVA-135,High,Building C,Smoke or Fire,2025-06-11 11:22:45,CAM-135,
+CVA-136,Medium,Building A,Person Jumping Fence,2025-06-11 11:49:18,CAM-136,
+CVA-137,High,Building B,Person Falling Down,2025-06-11 12:15:54,CAM-137,
+CVA-138,Medium,Building C,Tailgating,2025-06-11 12:42:17,CAM-138,READER-046
+CVA-139,High,Building A,Person Brandishing Firearm,2025-06-11T13:,,

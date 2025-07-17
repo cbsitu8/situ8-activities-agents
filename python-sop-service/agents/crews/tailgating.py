@@ -1,5 +1,6 @@
 """
-CrewAI Badge Correlator Agents for Tailgating Threat Analysis
+CrewAI Tailgating Correlation Crew
+Moved from crew_ai_agents.py for better organization
 """
 
 import os
@@ -11,8 +12,10 @@ from crewai import Agent, Task, Crew, Process
 from crewai.tools import tool
 from langchain_openai import ChatOpenAI
 from sqlalchemy.orm import Session
-from database_new import SessionLocal, Event, BadgeHolder, ThreatCorrelation
 import logging
+
+# Import database models
+from models.database import SessionLocal, Event, BadgeHolder, ThreatCorrelation
 
 logger = logging.getLogger(__name__)
 
